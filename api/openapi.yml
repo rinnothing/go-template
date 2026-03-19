@@ -1,0 +1,156 @@
+openapi: 3.0.3
+info:
+  title: Template KeyVal storage
+  version: "1.0.0"
+
+components:
+  parameters:
+    KeyValQuery:
+      name: key
+      in: query
+      required: true
+      schema:
+        type: string
+      description: Value key
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum:
+            - KEYVAL_EXISTS
+            - NOT_FOUND
+            - BAD_REQUEST
+        message:
+          type: string
+    KeyVal:
+      type: object
+      required: [ key, value ]
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: KeyVal not found
+      content:
+        application/json:
+          schema: 
+            $ref: '#/components/schemas/ErrorResponse'
+
+paths:
+  /keyval:
+    post:
+      operationId: createKeyval
+      summary: Create new KeyVal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyVal'
+      responses:
+        '201':
+          description: KeyVal created
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/KeyVal'
+        '409':
+          description: KeyVal already exists
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      operationId: getKeyval
+      summary: Get KeyVal by key
+      parameters:
+        - $ref: '#/components/parameters/KeyValQuery'
+      responses:
+        '200':
+          description: KeyVal found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyVal'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    put:
+      operationId: updateKeyval
+      summary: Update existing KeyVal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyVal'
+      responses:
+        '200':
+          description: KeyVal updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyVal'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    delete:
+      operationId: deleteKeyval
+      summary: Delete existing KeyVal
+      parameters:
+        - $ref: '#/components/parameters/KeyValQuery'
+      responses:
+        '200':
+          description: KeyVal removed
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /async:
+    put:
+      operationId: putKeyvalAsync
+      summary: Create or update KeyVal asynchroniously
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyVal'
+      responses:
+        '200':
+          description: Async request accepted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /fast:
+    get:
+      operationId: getKeyvalFast
+      summary: Get KeyVal by key from cache (inconsistency possible)
+      parameters:
+        - $ref: '#/components/parameters/KeyValQuery'
+      responses:
+        '200':
+          description: KeyVal found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyVal'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
